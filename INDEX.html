@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diario de Campo · Educación Física</title>
+<style>
+  :root{
+    --ink:#1f1b3a;
+    --muted:#6b6790;
+    --card:#ffffff;
+    --radius:22px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Trebuchet MS","Segoe UI",system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    background:linear-gradient(135deg,#1b1464 0%,#5b1fa8 45%,#d6247f 100%);
+    background-attachment:fixed;
+    padding:18px 14px 60px;
+    overflow-x:hidden;
+  }
+  /* burbujas decorativas */
+  .blob{position:fixed;border-radius:50%;filter:blur(60px);opacity:.35;z-index:0;pointer-events:none;animation:float 14s ease-in-out infinite}
+  .b1{width:300px;height:300px;background:#ffb100;top:-80px;left:-80px}
+  .b2{width:340px;height:340px;background:#00e5ff;bottom:-100px;right:-80px;animation-delay:-5s}
+  .b3{width:220px;height:220px;background:#76ff03;top:45%;left:60%;animation-delay:-9s;opacity:.2}
+  @keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-30px) scale(1.1)}}
+
+  .wrap{position:relative;z-index:1;max-width:860px;margin:0 auto}
+
+  header{text-align:center;color:#fff;padding:14px 8px 10px}
+  header .badge{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:6px 16px;border-radius:999px;font-weight:700;font-size:.85rem;letter-spacing:.5px;backdrop-filter:blur(6px)}
+  header h1{font-size:clamp(1.9rem,6vw,3rem);margin:12px 0 6px;line-height:1.05;text-shadow:0 4px 18px rgba(0,0,0,.3)}
+  header h1 span{background:linear-gradient(90deg,#ffe53b,#ff8a00);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{opacity:.92;font-size:1.02rem;max-width:560px;margin:0 auto}
+
+  .who{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 8px}
+  .who input{width:100%;padding:13px 16px;border-radius:14px;border:2px solid transparent;font:inherit;font-size:.98rem;background:rgba(255,255,255,.95);outline:none;transition:.2s}
+  .who input:focus{border-color:#ffe53b;box-shadow:0 0 0 4px rgba(255,229,59,.3)}
+
+  /* progreso */
+  .progress{background:rgba(255,255,255,.2);border-radius:999px;height:14px;overflow:hidden;margin:14px 0 6px;border:1px solid rgba(255,255,255,.3)}
+  .progress>i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#ffe53b,#76ff03,#00e5ff);transition:width .6s cubic-bezier(.2,.9,.3,1.2)}
+  .progress-label{color:#fff;text-align:right;font-size:.85rem;font-weight:700;margin-bottom:10px}
+
+  /* pasos */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
+  .step{border:none;cursor:pointer;font:inherit;padding:10px 6px;border-radius:16px;background:rgba(255,255,255,.16);color:#fff;font-weight:700;font-size:.82rem;transition:.25s;display:flex;flex-direction:column;align-items:center;gap:2px;border:2px solid transparent;position:relative}
+  .step .em{font-size:1.5rem;transition:.25s}
+  .step:hover{background:rgba(255,255,255,.28);transform:translateY(-2px)}
+  .step.active{background:#fff;color:var(--ink);box-shadow:0 10px 24px rgba(0,0,0,.25);transform:translateY(-3px)}
+  .step.active .em{transform:scale(1.2) rotate(-6deg)}
+  .step.done::after{content:"✓";position:absolute;top:-7px;right:-4px;background:#00e676;color:#073b1c;width:22px;height:22px;border-radius:50%;font-size:.8rem;display:grid;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.3)}
+
+  /* tarjetas */
+  .panel{display:none;animation:pop .45s cubic-bezier(.2,.9,.3,1.2)}
+  .panel.show{display:block}
+  @keyframes pop{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:0 18px 40px rgba(0,0,0,.28);overflow:hidden}
+  .card-top{padding:22px 22px 20px;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c2));position:relative;overflow:hidden}
+  .card-top::after{content:attr(data-em);position:absolute;right:-8px;bottom:-24px;font-size:7.5rem;opacity:.2;transform:rotate(-12deg)}
+  .phase-tag{display:inline-block;background:rgba(255,255,255,.25);padding:4px 12px;border-radius:999px;font-size:.78rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase}
+  .card-top h2{font-size:clamp(1.4rem,4.5vw,1.9rem);margin:8px 0 4px}
+  .card-top .sub{font-weight:700;opacity:.95;margin-bottom:6px}
+  .card-top p.desc{opacity:.95;line-height:1.45;max-width:90%;position:relative;z-index:1}
+
+  .card-body{padding:22px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+  .chip{padding:6px 12px;border-radius:999px;font-size:.82rem;font-weight:700;background:color-mix(in srgb,var(--c1) 14%,white);color:var(--ink);border:1.5px dashed var(--c1)}
+
+  .q{font-weight:800;font-size:1.05rem;margin:4px 0 10px;display:flex;align-items:center;gap:8px}
+  .q .n{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:.85rem;flex:none}
+
+  .ratings{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
+  .rate{font:inherit;cursor:pointer;border:2.5px solid #e6e3f5;background:#faf9ff;border-radius:18px;padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800;color:var(--ink);transition:.2s}
+  .rate .e{font-size:2rem;transition:.25s}
+  .rate small{font-weight:600;color:var(--muted);font-size:.72rem}
+  .rate:hover{transform:translateY(-3px);border-color:var(--c1)}
+  .rate:hover .e{transform:scale(1.2)}
+  .rate.sel{color:#fff;border-color:transparent;transform:translateY(-3px) scale(1.03);box-shadow:0 10px 20px rgba(0,0,0,.2)}
+  .rate.sel small{color:rgba(255,255,255,.9)}
+  .rate.sel[data-v="bueno"]{background:linear-gradient(135deg,#00c853,#00e5a0)}
+  .rate.sel[data-v="regular"]{background:linear-gradient(135deg,#ffab00,#ffd600);color:#3b2a00}
+  .rate.sel[data-v="mejorar"]{background:linear-gradient(135deg,#ff5252,#ff8a65)}
+  .rate.sel[data-v="regular"] small{color:#5c4300}
+
+  textarea{width:100%;min-height:120px;resize:vertical;font:inherit;font-size:1rem;line-height:1.5;padding:14px 16px;border-radius:16px;border:2.5px solid #e6e3f5;background:#faf9ff;color:var(--ink);outline:none;transition:.2s}
+  textarea:focus{border-color:var(--c1);box-shadow:0 0 0 5px color-mix(in srgb,var(--c1) 22%,transparent);background:#fff}
+  .hint{font-size:.82rem;color:var(--muted);margin:6px 2px 0;line-height:1.4}
+
+  .btn{font:inherit;cursor:pointer;border:none;border-radius:16px;padding:14px 22px;font-weight:800;font-size:1rem;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 10px 22px rgba(0,0,0,.22);transition:.2s}
+  .btn:hover{transform:translateY(-2px) scale(1.02)}
+  .btn:active{transform:scale(.97)}
+  .btn.ghost{background:#fff;color:var(--ink);border:2.5px solid #e6e3f5;box-shadow:none}
+  .btn.ghost:hover{border-color:var(--c1)}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center}
+
+  .warn{display:none;margin-top:12px;background:#fff4e5;border-left:5px solid #ff9800;padding:10px 14px;border-radius:10px;font-weight:700;font-size:.92rem}
+  .warn.show{display:block;animation:shake .4s}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  .support{display:none;margin-top:20px;padding:18px 18px 18px 20px;border-radius:18px;background:linear-gradient(135deg,color-mix(in srgb,var(--c1) 12%,white),color-mix(in srgb,var(--c2) 14%,white));border:2px solid var(--c1);position:relative}
+  .support.show{display:block;animation:pop .5s cubic-bezier(.2,.9,.3,1.3)}
+  .support .lbl{font-size:.78rem;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--c1);margin-bottom:6px}
+  .support .txt{font-size:1.08rem;line-height:1.55;font-weight:700}
+  .support .ico{position:absolute;top:-16px;right:14px;font-size:2rem;background:#fff;border-radius:50%;width:46px;height:46px;display:grid;place-items:center;box-shadow:0 6px 14px rgba(0,0,0,.18)}
+
+  /* resumen */
+  .summary{display:none;margin-top:22px}
+  .summary.show{display:block;animation:pop .5s}
+  .sum-item{background:#faf9ff;border-radius:16px;padding:14px 16px;margin-bottom:12px;border-left:6px solid var(--c)}
+  .sum-item h4{margin-bottom:6px;font-size:1rem}
+  .sum-item .pill{display:inline-block;font-size:.78rem;font-weight:800;padding:3px 10px;border-radius:999px;color:#fff;margin-bottom:6px}
+  .sum-item p{white-space:pre-wrap;line-height:1.5;font-size:.95rem}
+  .sum-item em{display:block;margin-top:8px;color:var(--muted);font-size:.9rem}
+  .done-banner{text-align:center;padding:18px;border-radius:18px;background:linear-gradient(135deg,#ffe53b,#ff8a00);font-weight:900;font-size:1.15rem;margin-bottom:14px;color:#3b1d00}
+
+  footer{text-align:center;color:rgba(255,255,255,.8);font-size:.82rem;margin-top:22px}
+  footer button{background:none;border:none;color:#fff;text-decoration:underline;cursor:pointer;font:inherit;font-weight:700}
+
+  /* confeti */
+  .confetti{position:fixed;top:-30px;z-index:50;pointer-events:none;font-size:1.6rem;animation:fall 2.2s ease-in forwards}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.9}}
+
+  @media(max-width:560px){
+    .who{grid-template-columns:1fr}
+    .step{font-size:.68rem;padding:8px 2px}
+    .step .em{font-size:1.25rem}
+    .ratings{gap:6px}
+    .rate{padding:10px 2px;font-size:.82rem}
+    .card-top p.desc{max-width:100%}
+  }
+  .modal{position:fixed;inset:0;z-index:100;background:rgba(20,10,50,.65);backdrop-filter:blur(4px);display:grid;place-items:center;padding:18px;animation:pop .25s}
+  .modal-box{background:#fff;border-radius:24px;padding:26px 22px;max-width:400px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+  .modal-ico{font-size:2.6rem}
+  .modal-box h3{margin:6px 0 8px;font-size:1.3rem}
+  .modal-box p{color:var(--muted);line-height:1.5}
+  .sum-head{font-weight:700;color:var(--muted);margin:0 2px 12px;font-size:.92rem}
+  .sum-note{margin-top:8px}
+  @media print{
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{background:#fff;padding:0}
+    .blob,header,.progress,.progress-label,.steps,footer,.confetti{display:none!important}
+    .panel{display:none!important}
+    .panel#panel-3{display:block!important;animation:none}
+    #panel-3 .card{box-shadow:none;border-radius:0}
+    #panel-3 .card-top,#panel-3 .chips,#panel-3 .q,#panel-3 #final-text,#panel-3 .hint,#panel-3 .warn,
+    #panel-3 .card-body>.actions,#summary .actions,#summary .hint{display:none!important}
+    .sum-item{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+<div class="wrap">
+  <header>
+    <span class="badge">🏅 EDUCACIÓN FÍSICA · SECUNDARIA</span>
+    <h1>Mi Diario de <span>Campo</span></h1>
+    <p>Cuéntame cómo viviste tu clase: lo que hiciste, lo que sentiste y lo que aprendiste. No hay respuestas incorrectas. 💬</p>
+    <div class="who">
+      <input id="name" type="text" placeholder="✏️ Mi nombre" maxlength="60" autocomplete="off">
+      <input id="group" type="text" placeholder="🏫 Mi grado y grupo (ej. 2.º B)" maxlength="30" autocomplete="off">
+    </div>
+  </header>
+
+  <div class="progress"><i id="bar"></i></div>
+  <div class="progress-label" id="plabel">0 de 4 apartados completados</div>
+
+  <nav class="steps" id="steps"></nav>
+  <main id="panels"></main>
+
+  <footer>
+    Tus respuestas se guardan solo en este dispositivo. <button id="reset" type="button">Empezar un diario nuevo</button>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Datos pedagógicos ---------- */
+  var PHASES = [
+    {
+      key:"activacion", emoji:"🔥", c1:"#ff5722", c2:"#ffb300",
+      tag:"Fase 1", title:"Activación motriz", sub:"Calentamiento",
+      desc:"Prepara tu cuerpo y tu mente para la actividad física con movimientos articulares, desplazamientos y ejercicios de intensidad progresiva.",
+      chips:["🔄 Movimientos articulares","🏃 Desplazamientos","📈 Intensidad progresiva"],
+      ph:"Ej.: Me sentí bien porque platiqué con mis amigos mientras trotábamos… / Me costó un poco empezar porque tenía sueño…"
+    },
+    {
+      key:"exploracion", emoji:"🎯", c1:"#00c853", c2:"#00b8d4",
+      tag:"Fase 2", title:"Exploración lúdica", sub:"Actividad recreativa",
+      desc:"Aprende jugando: juegos, retos motrices y actividades recreativas que favorecen la convivencia, la participación y el trabajo en equipo.",
+      chips:["🎲 Juegos","🧩 Retos motrices","🤝 Trabajo en equipo"],
+      ph:"Ej.: Me sentí triste porque no me salió la actividad… / Me divertí mucho porque mi equipo se coordinó…"
+    },
+    {
+      key:"recuperacion", emoji:"🌿", c1:"#7c4dff", c2:"#ec407a",
+      tag:"Fase 3", title:"Recuperación y reflexión", sub:"Vuelta a la calma",
+      desc:"Recupera tu cuerpo poco a poco con respiraciones y movimientos suaves, y reflexiona un momento sobre lo que aprendiste hoy.",
+      chips:["🌬️ Respiraciones","🧘 Movimientos suaves","💭 Reflexión breve"],
+      ph:"Ej.: Me sentí bien aunque la actividad me hizo llorar por lo emotiva que fue… / Me relajé y pude pensar en cómo me fue…"
+    }
+  ];
+
+  var FINAL = { key:"vida", emoji:"🌟", c1:"#ff4081", c2:"#ffab00" };
+
+  var RATINGS = [
+    {v:"bueno",   e:"😄", t:"Bueno",           s:"Me fue muy bien"},
+    {v:"regular", e:"🙂", t:"Regular",         s:"Más o menos"},
+    {v:"mejorar", e:"💪", t:"Necesito mejorar",s:"Puedo dar más"}
+  ];
+  var RATING_COLOR = {bueno:"#00c853", regular:"#f5a500", mejorar:"#ff5252"};
+  var RATING_LABEL = {bueno:"Bueno", regular:"Regular", mejorar:"Necesito mejorar"};
+
+  /* Nombre completo de la fase: "Activación motriz (Calentamiento)" */
+  function phaseName(ph){ return ph.title + " (" + ph.sub + ")"; }
+
+  /* Frases de apoyo: sirven para emociones alegres, tristes o mixtas */
+  var PHRASES = [
+    "Sentir lo que sentiste también es parte de aprender. Gracias por contarlo con tanta sinceridad.",
+    "Recuerda que lo importante es no rendirte y seguir intentándolo a tu propio ritmo.",
+    "Una actividad que no salió hoy no borra el esfuerzo que pusiste. Así se construye la práctica, paso a paso.",
+    "Tus emociones cuentan tanto como tus resultados. Lo que sentiste importa y aquí siempre tiene lugar.",
+    "Cada vez que lo intentas, tu cuerpo y tu mente aprenden algo nuevo, aunque todavía no se note.",
+    "Reconocer cómo te sientes y ponerlo en palabras es una fortaleza. Eso también se entrena.",
+    "No todos los días se sienten igual, y está bien. Lo valioso es que hoy te diste un momento para escucharte.",
+    "Los grandes avances empiezan con pequeños intentos. Hoy diste uno más, y eso suma.",
+    "Si hubo risas, disfrútalas; si hubo lágrimas, también fueron valientes. Las dos muestran que te involucraste de verdad.",
+    "Tu ritmo es solo tuyo y no necesita compararse con el de nadie. Lo que sigue es avanzar a tu paso.",
+    "Equivocarte es parte del juego. Tu cuerpo sigue aprendiendo incluso cuando algo no sale a la primera.",
+    "Convivir, apoyarte en otros y dejar que otros se apoyen en ti también es aprender en Educación Física."
+  ];
+
+  var STORE_KEY = "diario-ef-secundaria-v1";
+
+  /* ---------- Estado ---------- */
+  var state = fresh();
+  function fresh(){
+    return {
+      name:"", group:"",
+      phases:PHASES.map(function(){ return {rating:"", text:"", phrase:"", done:false}; }),
+      final:{text:"", done:false},
+      current:0
+    };
+  }
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(raw){
+        var s = JSON.parse(raw);
+        if(s && s.phases && s.phases.length === PHASES.length && s.final) state = s;
+      }
+    }catch(e){}
+  }
+  function save(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  /* Bolsa aleatoria: no repite frase hasta agotar todas */
+  var bag = [];
+  function nextPhrase(avoid){
+    if(!bag.length){
+      bag = PHRASES.slice();
+      for(var i=bag.length-1;i>0;i--){
+        var j = Math.floor(Math.random()*(i+1));
+        var t = bag[i]; bag[i] = bag[j]; bag[j] = t;
+      }
+    }
+    var p = bag.pop();
+    if(p === avoid && bag.length){ var q = bag.pop(); bag.push(p); p = q; }
+    return p;
+  }
+
+  /* ---------- Utilidades DOM ---------- */
+  function $(sel, root){ return (root||document).querySelector(sel); }
+  function el(tag, attrs, html){
+    var n = document.createElement(tag);
+    if(attrs) for(var k in attrs) n.setAttribute(k, attrs[k]);
+    if(html != null) n.innerHTML = html;
+    return n;
+  }
+
+  var stepsNav = $("#steps");
+  var panels = $("#panels");
+
+  /* ---------- Construcción de la interfaz ---------- */
+  function build(){
+    stepsNav.innerHTML = ""; panels.innerHTML = "";
+
+    PHASES.forEach(function(ph, i){
+      var b = el("button", {"class":"step","type":"button","data-i":i},
+        '<span class="em">'+ph.emoji+'</span><span>'+ph.title.split(" ")[0]+'</span>');
+      b.addEventListener("click", function(){ go(i); });
+      stepsNav.appendChild(b);
+
+      var ratingsHtml = RATINGS.map(function(r){
+        return '<button type="button" class="rate" data-v="'+r.v+'"><span class="e">'+r.e+'</span>'+r.t+'<small>'+r.s+'</small></button>';
+      }).join("");
+
+      var chips = ph.chips.map(function(c){ return '<span class="chip">'+c+'</span>'; }).join("");
+
+      var p = el("section", {"class":"panel","id":"panel-"+i,"style":"--c1:"+ph.c1+";--c2:"+ph.c2});
+      p.innerHTML =
+        '<div class="card">' +
+          '<div class="card-top" data-em="'+ph.emoji+'">' +
+            '<span class="phase-tag">'+ph.tag+' de 3</span>' +
+            '<h2>'+ph.emoji+' '+phaseName(ph)+'</h2>' +
+            '<p class="desc">'+ph.desc+'</p>' +
+          '</div>' +
+          '<div class="card-body">' +
+            '<div class="chips">'+chips+'</div>' +
+            '<div class="q"><span class="n">1</span> ¿Cómo califico mi desempeño en esta etapa?</div>' +
+            '<div class="ratings">'+ratingsHtml+'</div>' +
+            '<div class="q"><span class="n">2</span> ¿Cómo me sentí en esta etapa?</div>' +
+            '<textarea placeholder="'+ph.ph+'" maxlength="800"></textarea>' +
+            '<div class="hint">Escribe lo que quieras: alegría, nervios, tristeza, enojo, cansancio… todas las emociones son válidas. 💛</div>' +
+            '<div class="warn"></div>' +
+            '<div class="actions">' +
+              '<button type="button" class="btn complete">✨ Completar etapa y recibir mensaje</button>' +
+            '</div>' +
+            '<div class="support"><div class="ico">💬</div><div class="lbl">Un mensaje para ti</div><div class="txt"></div>' +
+              '<div class="actions"><button type="button" class="btn next">Siguiente →</button></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      panels.appendChild(p);
+      wirePhase(p, i);
+    });
+
+    /* Paso final */
+    var fb = el("button", {"class":"step","type":"button","data-i":PHASES.length},
+      '<span class="em">'+FINAL.emoji+'</span><span>Mi vida</span>');
+    fb.addEventListener("click", function(){ go(PHASES.length); });
+    stepsNav.appendChild(fb);
+
+    var fp = el("section", {"class":"panel","id":"panel-"+PHASES.length,"style":"--c1:"+FINAL.c1+";--c2:"+FINAL.c2});
+    fp.innerHTML =
+      '<div class="card">' +
+        '<div class="card-top" data-em="🌟">' +
+          '<span class="phase-tag">Apartado final</span>' +
+          '<h2>🌟 Reflexión para mi vida diaria</h2>' +
+          '<div class="sub">¿Para qué me sirve lo que viví hoy?</div>' +
+          '<p class="desc">Piensa en toda la clase: lo que hiciste, lo que sentiste y lo que descubriste sobre ti y sobre tus compañeros.</p>' +
+        '</div>' +
+        '<div class="card-body">' +
+          '<div class="chips">' +
+            '<span class="chip">🏠 En mi casa</span><span class="chip">📚 En la escuela</span>' +
+            '<span class="chip">👫 Con mis amigos</span><span class="chip">🧠 Conmigo mismo</span>' +
+          '</div>' +
+          '<div class="q"><span class="n">★</span> ¿Cómo lo que aprendí o viví en esta clase me ayuda en mi vida diaria?</div>' +
+          '<textarea id="final-text" style="min-height:150px" maxlength="1200" placeholder="Pistas para pensar: ¿Qué hice cuando algo no me salió? ¿Cómo me llevé con mi equipo? ¿Cuidar mi cuerpo y mis emociones me sirve fuera de la escuela? ¿Dónde puedo usar lo que aprendí hoy?"></textarea>' +
+          '<div class="hint">No tiene que ser largo; lo importante es que sea tuyo y sincero.</div>' +
+          '<div class="warn" id="final-warn"></div>' +
+          '<div class="actions"><button type="button" class="btn" id="finish">🎉 Terminar mi diario</button></div>' +
+          '<div class="summary" id="summary"></div>' +
+        '</div>' +
+      '</div>';
+    panels.appendChild(fp);
+
+    $("#finish").addEventListener("click", finishDiary);
+    $("#final-text").addEventListener("input", function(e){ state.final.text = e.target.value; save(); });
+  }
+
+  function wirePhase(p, i){
+    var st = state.phases[i];
+    var ta = $("textarea", p);
+    var warn = $(".warn", p);
+
+    Array.prototype.forEach.call(p.querySelectorAll(".rate"), function(btn){
+      btn.addEventListener("click", function(){
+        st.rating = btn.getAttribute("data-v");
+        paintRating(p, st.rating);
+        warn.classList.remove("show");
+        save();
+      });
+    });
+
+    ta.addEventListener("input", function(){ st.text = ta.value; warn.classList.remove("show"); save(); });
+
+    $(".complete", p).addEventListener("click", function(){
+      var msgs = [];
+      if(!st.rating) msgs.push("elige cómo calificas tu desempeño");
+      if(st.text.trim().length < 3) msgs.push("cuéntanos cómo te sentiste");
+      if(msgs.length){
+        warn.textContent = "👉 Antes de continuar, " + msgs.join(" y ") + ".";
+        warn.classList.remove("show"); void warn.offsetWidth; warn.classList.add("show");
+        return;
+      }
+      st.phrase = nextPhrase(st.phrase);
+      st.done = true;
+      showSupport(p, i, true);
+      refresh();
+      save();
+      burst();
+    });
+
+    $(".next", p).addEventListener("click", function(){ go(i+1); });
+  }
+
+  function paintRating(p, v){
+    Array.prototype.forEach.call(p.querySelectorAll(".rate"), function(b){
+      b.classList.toggle("sel", b.getAttribute("data-v") === v);
+    });
+  }
+
+  function showSupport(p, i, animate){
+    var st = state.phases[i];
+    var box = $(".support", p);
+    $(".txt", p).textContent = st.phrase;
+    box.classList.remove("show");
+    if(animate) void box.offsetWidth;
+    box.classList.add("show");
+    $(".complete", p).textContent = "🔁 Guardar cambios y nuevo mensaje";
+    $(".next", p).textContent = (i === PHASES.length-1) ? "Ir a la reflexión final →" : "Siguiente etapa →";
+    if(animate) box.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+
+  /* ---------- Navegación y progreso ---------- */
+  function go(i){
+    state.current = i;
+    Array.prototype.forEach.call(panels.children, function(p, k){ p.classList.toggle("show", k === i); });
+    Array.prototype.forEach.call(stepsNav.children, function(s, k){ s.classList.toggle("active", k === i); });
+    save();
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  function refresh(){
+    var done = state.phases.filter(function(s){ return s.done; }).length + (state.final.done ? 1 : 0);
+    $("#bar").style.width = (done/4*100) + "%";
+    $("#plabel").textContent = done + " de 4 apartados completados" + (done === 4 ? " 🏆" : "");
+    Array.prototype.forEach.call(stepsNav.children, function(s, k){
+      var d = k < PHASES.length ? state.phases[k].done : state.final.done;
+      s.classList.toggle("done", d);
+    });
+  }
+
+  /* ---------- Cierre y resumen ---------- */
+  function finishDiary(){
+    var warn = $("#final-warn");
+    if(state.final.text.trim().length < 5){
+      warn.textContent = "👉 Cuéntanos con tus palabras cómo te ayuda lo que viviste hoy en tu vida diaria.";
+      warn.classList.remove("show"); void warn.offsetWidth; warn.classList.add("show");
+      return;
+    }
+    warn.classList.remove("show");
+    state.final.done = true;
+    save(); refresh(); renderSummary(); burst(); burst();
+    $("#summary").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  function renderSummary(){
+    var box = $("#summary");
+    box.innerHTML = "";
+    var nm = state.name.trim();
+    box.appendChild(el("div", {"class":"done-banner"},
+      "🏆 ¡Terminaste tu diario" + (nm ? ", " : "") + "<span id='nm'></span>!"));
+    $("#nm", box).textContent = nm;
+
+    var head = el("div", {"class":"sum-head"});
+    head.textContent = "👤 " + (nm || "—") + "   ·   🏫 " + (state.group.trim() || "—") + "   ·   📅 " + new Date().toLocaleDateString("es-MX");
+    box.appendChild(head);
+
+    PHASES.forEach(function(ph, i){
+      var st = state.phases[i];
+      var item = el("div", {"class":"sum-item","style":"--c:"+ph.c1});
+      var h = el("h4"); h.textContent = ph.emoji + " " + phaseName(ph);
+      var pill = el("span", {"class":"pill","style":"background:"+(RATING_COLOR[st.rating]||"#999")});
+      pill.textContent = RATING_LABEL[st.rating] || "Sin calificar";
+      var t = el("p"); t.textContent = st.text || "(Sin respuesta)";
+      item.appendChild(h); item.appendChild(pill); item.appendChild(t);
+      if(st.phrase){ var f = el("em"); f.textContent = "💬 " + st.phrase; item.appendChild(f); }
+      box.appendChild(item);
+    });
+
+    var fi = el("div", {"class":"sum-item","style":"--c:"+FINAL.c1});
+    var fh = el("h4"); fh.textContent = "🌟 Mi aprendizaje en la vida diaria";
+    var fpp = el("p"); fpp.textContent = state.final.text;
+    fi.appendChild(fh); fi.appendChild(fpp); box.appendChild(fi);
+
+    var act = el("div", {"class":"actions"});
+    var pdf = el("button", {"class":"btn","type":"button"}, "📄 Guardar como PDF");
+    var dl = el("button", {"class":"btn ghost","type":"button"}, "⬇️ Descargar texto (.txt)");
+    var pr = el("button", {"class":"btn ghost","type":"button"}, "🖨️ Imprimir");
+    pdf.addEventListener("click", downloadPDF);
+    dl.addEventListener("click", download);
+    pr.addEventListener("click", function(){
+      try{ window.print(); }
+      catch(e){ window.alert("Tu navegador no permitió abrir la impresión. Usa el botón «Guardar como PDF»."); }
+    });
+    act.appendChild(pdf); act.appendChild(dl); act.appendChild(pr); box.appendChild(act);
+    var note = el("div", {"class":"hint sum-note"},
+      "💡 «Guardar como PDF» descarga el archivo directamente. Si «Imprimir» no abre nada en tu dispositivo, usa ese botón.");
+    box.appendChild(note);
+    box.classList.add("show");
+  }
+
+  /* ---------- Generador de PDF (no depende del diálogo de impresión) ---------- */
+  var HW = {};
+  (function(){
+    var w = [
+      278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,            /* espacio a / */
+      556,556,556,556,556,556,556,556,556,556,                                      /* 0-9 */
+      278,278,584,584,584,556,1015,                                                 /* : ; < = > ? @ */
+      667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611, /* A-Z */
+      278,278,278,469,556,333,                                                      /* [ \ ] ^ _ ` */
+      556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500, /* a-z */
+      334,260,334,584                                                               /* { | } ~ */
+    ];
+    for(var i=0;i<w.length;i++) HW[String.fromCharCode(32+i)] = w[i];
+  })();
+
+  function toLatin1(s){
+    return String(s)
+      .replace(/[…]/g,"...").replace(/[–—]/g,"-")
+      .replace(/[“”]/g,'"').replace(/[‘’]/g,"'")
+      .replace(/[ ]/g," ")
+      .replace(/[^\u0009\u000A -~¡-ÿ]/g,"");
+  }
+  function charW(c){
+    var v = HW[c];
+    if(v == null){
+      var b = c.normalize ? c.normalize("NFD").charAt(0) : c;
+      v = HW[b];
+      if(c === "¿") v = 611;
+      if(c === "¡") v = 333;
+    }
+    return v == null ? 556 : v;
+  }
+  function textW(s, size, bold){
+    var w = 0;
+    for(var i=0;i<s.length;i++) w += charW(s.charAt(i));
+    return w * size / 1000 * (bold ? 1.08 : 1);
+  }
+  function wrapText(text, size, bold, maxW){
+    var out = [];
+    toLatin1(text).split("\n").forEach(function(par){
+      var words = par.split(/\s+/).filter(Boolean), line = "";
+      if(!words.length){ out.push(""); return; }
+      words.forEach(function(wd){
+        while(textW(wd, size, bold) > maxW){           /* palabra muy larga: partirla */
+          var cut = wd.length - 1;
+          while(cut > 1 && textW(wd.slice(0,cut), size, bold) > maxW) cut--;
+          if(line){ out.push(line); line = ""; }
+          out.push(wd.slice(0,cut)); wd = wd.slice(cut);
+        }
+        var test = line ? line + " " + wd : wd;
+        if(textW(test, size, bold) <= maxW) line = test;
+        else { out.push(line); line = wd; }
+      });
+      if(line) out.push(line);
+    });
+    return out;
+  }
+  function pdfEsc(s){ return s.replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)"); }
+  function hexRgb(h){
+    var n = parseInt(h.replace("#",""), 16);
+    return [((n>>16)&255)/255, ((n>>8)&255)/255, (n&255)/255];
+  }
+  function rgbStr(c){ return c.map(function(v){ return v.toFixed(3); }).join(" "); }
+
+  function buildPDF(){
+    var W = 595, H = 842, M = 52, maxW = W - 2*M;
+    var INK = [0.12,0.11,0.23], GRAY = [0.42,0.40,0.56];
+    var pages = [[]], y = H - M;
+    function cur(){ return pages[pages.length-1]; }
+    function ensure(h){ if(y - h < M){ pages.push([]); y = H - M; } }
+    function line(txt, size, bold, color, indent){
+      ensure(size * 1.4);
+      y -= size * 1.4;
+      cur().push("BT /" + (bold ? "F2" : "F1") + " " + size + " Tf " + rgbStr(color) + " rg " +
+                 (M + (indent||0)) + " " + y.toFixed(1) + " Td (" + pdfEsc(txt) + ") Tj ET");
+    }
+    function para(txt, size, bold, color, indent){
+      wrapText(txt, size, bold, maxW - (indent||0)).forEach(function(l){ line(l, size, bold, color, indent); });
+    }
+    function gap(n){ y -= n; }
+
+    /* Banda superior */
+    cur().push("0.486 0.302 1 rg 0 " + (H-100) + " " + W + " 100 re f");
+    cur().push("1 0.82 0.15 rg 0 " + (H-104) + " " + W + " 4 re f");
+    cur().push("BT /F2 24 Tf 1 1 1 rg " + M + " " + (H-52) + " Td (DIARIO DE CAMPO) Tj ET");
+    cur().push("BT /F1 12 Tf 1 1 1 rg " + M + " " + (H-76) + " Td (" + pdfEsc(toLatin1("Educación Física · Secundaria")) + ") Tj ET");
+    y = H - 100 - 22;
+
+    var nm = state.name.trim() || "-", gr = state.group.trim() || "-";
+    para("Nombre: " + nm, 12, true, INK);
+    para("Grado y grupo: " + gr, 12, true, INK);
+    para("Fecha: " + new Date().toLocaleDateString("es-MX"), 12, false, GRAY);
+    gap(10);
+
+    PHASES.forEach(function(ph, i){
+      var st = state.phases[i], col = hexRgb(ph.c1);
+      ensure(90);
+      gap(8);
+      cur().push(rgbStr(col) + " rg " + M + " " + (y - 4).toFixed(1) + " " + maxW + " 1.5 re f");
+      gap(6);
+      para(phaseName(ph), 15, true, col);
+      gap(2);
+      para("Autoevaluación: " + (RATING_LABEL[st.rating] || "Sin calificar"), 11.5, true, hexRgb(RATING_COLOR[st.rating] || "#888888"));
+      gap(3);
+      para("¿Cómo me sentí en esta etapa?", 10, true, GRAY);
+      para(st.text || "(Sin respuesta)", 11.5, false, INK, 8);
+      if(st.phrase){
+        gap(4);
+        para("Mensaje de apoyo: " + st.phrase, 10, false, GRAY, 8);
+      }
+      gap(8);
+    });
+
+    var fc = hexRgb(FINAL.c1);
+    ensure(90);
+    gap(8);
+    cur().push(rgbStr(fc) + " rg " + M + " " + (y - 4).toFixed(1) + " " + maxW + " 1.5 re f");
+    gap(6);
+    para("Reflexión: ¿cómo me ayuda esto en mi vida diaria?", 15, true, fc);
+    gap(4);
+    para(state.final.text || "-", 11.5, false, INK, 8);
+
+    /* Ensamblar el archivo PDF */
+    var n = pages.length, objs = [];
+    objs[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+    var kids = [];
+    for(var p=0;p<n;p++) kids.push((5 + 2*p) + " 0 R");
+    objs[2] = "<< /Type /Pages /Kids [" + kids.join(" ") + "] /Count " + n + " >>";
+    objs[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+    objs[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+    for(var k=0;k<n;k++){
+      var stream = pages[k].join("\n");
+      objs[5 + 2*k] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H + "] " +
+        "/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " + (6 + 2*k) + " 0 R >>";
+      objs[6 + 2*k] = "<< /Length " + stream.length + " >>\nstream\n" + stream + "\nendstream";
+    }
+    var out = "%PDF-1.4\n", offsets = [];
+    for(var id=1; id<objs.length; id++){
+      offsets[id] = out.length;
+      out += id + " 0 obj\n" + objs[id] + "\nendobj\n";
+    }
+    var xref = out.length;
+    out += "xref\n0 " + objs.length + "\n0000000000 65535 f \n";
+    for(var j=1; j<objs.length; j++) out += ("0000000000" + offsets[j]).slice(-10) + " 00000 n \n";
+    out += "trailer\n<< /Size " + objs.length + " /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF";
+
+    var bytes = new Uint8Array(out.length);
+    for(var b=0;b<out.length;b++) bytes[b] = out.charCodeAt(b) & 255;
+    return bytes;
+  }
+
+  function downloadPDF(){
+    var bytes;
+    try{ bytes = buildPDF(); }
+    catch(e){ window.alert("No se pudo crear el PDF. Prueba con «Descargar texto (.txt)»."); return; }
+    var blob = new Blob([bytes], {type:"application/pdf"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "diario-de-campo" + (state.name.trim() ? "-" + state.name.trim().replace(/\s+/g,"-") : "") + ".pdf";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+  }
+
+  function download(){
+    var L = [];
+    L.push("DIARIO DE CAMPO · EDUCACIÓN FÍSICA");
+    L.push("Nombre: " + (state.name || "—") + "    Grado y grupo: " + (state.group || "—"));
+    L.push("Fecha: " + new Date().toLocaleDateString("es-MX"));
+    L.push("=".repeat(50));
+    PHASES.forEach(function(ph, i){
+      var st = state.phases[i];
+      L.push("");
+      L.push(phaseName(ph).toUpperCase());
+      L.push("Autoevaluación: " + (RATING_LABEL[st.rating] || "Sin calificar"));
+      L.push("¿Cómo me sentí? " + (st.text || "—"));
+      if(st.phrase) L.push("Mensaje de apoyo: " + st.phrase);
+    });
+    L.push("");
+    L.push("REFLEXIÓN: ¿cómo me ayuda esto en mi vida diaria?");
+    L.push(state.final.text || "—");
+    var blob = new Blob([L.join("\n")], {type:"text/plain;charset=utf-8"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "diario-de-campo" + (state.name ? "-" + state.name.trim().replace(/\s+/g,"-") : "") + ".txt";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1500);
+  }
+
+  /* ---------- Confeti ---------- */
+  function burst(){
+    var set = ["🎉","⭐","💛","💪","✨","🏅","🔥","🌈"];
+    for(var i=0;i<22;i++){
+      (function(i){
+        var c = document.createElement("div");
+        c.className = "confetti";
+        c.textContent = set[Math.floor(Math.random()*set.length)];
+        c.style.left = Math.random()*100 + "vw";
+        c.style.animationDelay = (Math.random()*0.5) + "s";
+        c.style.animationDuration = (1.8 + Math.random()*1.4) + "s";
+        document.body.appendChild(c);
+        setTimeout(function(){ c.remove(); }, 3600);
+      })(i);
+    }
+  }
+
+  /* ---------- Reiniciar ---------- */
+  function doReset(){
+    try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+    state = fresh();
+    $("#name").value = ""; $("#group").value = "";
+    init();
+  }
+
+  /* Confirmación propia (window.confirm se bloquea en algunos navegadores/vistas previas) */
+  function askReset(){
+    if($("#modal")) return;
+    var ov = el("div", {"class":"modal","id":"modal","role":"dialog","aria-modal":"true"},
+      '<div class="modal-box" style="--c1:#ff4081;--c2:#ffab00">' +
+        '<div class="modal-ico">🗑️</div>' +
+        '<h3>¿Empezar un diario nuevo?</h3>' +
+        '<p>Se borrarán las respuestas que tienes ahora en este dispositivo. Si quieres conservarlas, guarda antes tu PDF.</p>' +
+        '<div class="actions" style="justify-content:center">' +
+          '<button type="button" class="btn" id="m-yes">Sí, empezar de nuevo</button>' +
+          '<button type="button" class="btn ghost" id="m-no">Cancelar</button>' +
+        '</div>' +
+      '</div>');
+    document.body.appendChild(ov);
+    function close(){
+      if(ov.parentNode) ov.parentNode.removeChild(ov);
+      document.removeEventListener("keydown", onKey);
+    }
+    function onKey(e){ if(e.key === "Escape") close(); }
+    document.addEventListener("keydown", onKey);
+    $("#m-no", ov).addEventListener("click", close);
+    ov.addEventListener("click", function(e){ if(e.target === ov) close(); });
+    $("#m-yes", ov).addEventListener("click", function(){ close(); doReset(); });
+    $("#m-no", ov).focus();
+  }
+  $("#reset").addEventListener("click", askReset);
+
+  /* ---------- Inicio ---------- */
+  function init(){
+    build();
+    $("#name").value = state.name || "";
+    $("#group").value = state.group || "";
+    PHASES.forEach(function(ph, i){
+      var p = $("#panel-"+i), st = state.phases[i];
+      $("textarea", p).value = st.text || "";
+      if(st.rating) paintRating(p, st.rating);
+      if(st.done && st.phrase) showSupport(p, i, false);
+    });
+    $("#final-text").value = state.final.text || "";
+    if(state.final.done) renderSummary();
+    refresh();
+    go(Math.min(state.current || 0, PHASES.length));
+    window.scrollTo(0,0);
+  }
+
+  $("#name").addEventListener("input", function(e){ state.name = e.target.value; save(); });
+  $("#group").addEventListener("input", function(e){ state.group = e.target.value; save(); });
+
+  load();
+  init();
+})();
+</script>
+</body>
+</html>
